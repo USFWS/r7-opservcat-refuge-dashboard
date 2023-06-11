@@ -1,8 +1,8 @@
 [
   {
-    "name": "r7-repo-template",
+    "name": "r7-opservcat-refuge-dashboard",
     "organization": "U.S. Fish & Wildlife Service",
-    "description": "R7 GitHub Repository Template",
+    "description": "R7 Operation ServCat dashboard for project monitoring by NWRs",
     "version": "0.1.0",
     "status": "Development",
 
@@ -11,22 +11,24 @@
       "licenses": [
         {
           "name": "Public Domain, CC0-1.0",
-          "URL": "https://github.com/USFWS/r7-repo-template/blob/main/LICENSE.md"
+          "URL": "https://github.com/USFWS/r7-opservcat-refuge-dashboard/blob/main/LICENSE.md"
         }
       ]
     },
 
-    "homepageURL": "https://github.com/USFWS/r7-repo-template",
-    "downloadURL": "https://github.com/USFWS/r7-repo-template/archive/refs/heads/main.zip",
-    "disclaimerURL": "https://github.com/USFWS/r7-repo-template/blob/main/DISCLAIMER.md",
-    "repositoryURL": "https://github.com/USFWS/r7-repo-template.git",
+    "homepageURL": "https://github.com/USFWS/r7-opservcat-refuge-dashboard",
+    "downloadURL": "https://github.com/USFWS/r7-opservcat-refuge-dashboard/archive/refs/heads/main.zip",
+    "disclaimerURL": "https://github.com/USFWS/r7-opservcat-refuge-dashboard/blob/main/DISCLAIMER.md",
+    "repositoryURL": "https://github.com/USFWS/r7-opservcat-refuge-dashboard/r7-repo-template.git",
     "vcs": "git",
 
-    "laborHours": 4,
+    "laborHours": 30,
 
     "tags": [
       "r7",
-      "usfws"
+      "usfws",
+      "servcat",
+      "refuges"
     ],
 
     "languages": [
@@ -36,12 +38,12 @@
     ],
 
     "contact": {
-      "name": "Your first and last name",
-      "email": "firstname_lastname@fws.gov"
+      "name": "Emma Schillerstrom",
+      "email": "emma_schillerstrom@fws.gov"
     },
 
     "date": {
-      "metadataLastUpdated": "2023-05-17"
+      "metadataLastUpdated": "2023-06-10"
     }
   }
 ]
