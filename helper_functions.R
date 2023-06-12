@@ -77,6 +77,25 @@ api_call <- function(params){
   return(json_output)
 }
 
+#Function: api_call_sort(params)
+#Takes list of parameters formatted as json and returns the result of an
+#Advanced Search API call with url modified for sorting by date ascending
+api_call_sort <- function(params){
+  #Make call
+  url <- "https://ecos.fws.gov/ServCatServices/servcat-secure/v4/rest/AdvancedSearch/Composite?orderby=DateOfIssue&sort=ASC"
+  body <- toJSON(params, auto_unbox = TRUE)
+  response <- POST(url = url, config = authenticate(":",":","ntlm"), body = body, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
+  
+  #Halt code if error
+  if(http_error(response) == TRUE){
+    stop("This request has failed.")
+  }
+  
+  #Convert output from json for parsing
+  json_output <- fromJSON((content(response, as = "text")))
+  return(json_output)
+}
+
 #Function: query_refuge(refugeName)
 #Create parameter to filter search by references pertaining to a specific refuge
 query_refuge <- function(refugeName){

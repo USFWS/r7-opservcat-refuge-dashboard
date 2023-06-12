@@ -7,21 +7,7 @@ source("get_newR.R")
 source("get_oldestR.R")
 source("plot_subjectsR.R")
 source("plot_groupR.R")
-
-#List for drop down side bar
-refuges <- list("Alaska Maritime",
-                "APB",
-                "Arctic",
-                "Izembek",
-                "Kanuti",
-                "Kenai",
-                "KNI",
-                "Kodiak",
-                "Selawik",
-                "Tetlin",
-                "Togiak",
-                "Yukon Delta",
-                "Yukon Flats")
+source("helper_functions.R")
 
 #UI
 ui <- dashboardPage(
@@ -32,7 +18,7 @@ ui <- dashboardPage(
       menuItem(selectInput(
         inputId = "dropdown",
         label = "Select Your Refuge:",
-        refuges
+        return_refuge_df()$names
         )
       )
     )
