@@ -11,3 +11,8 @@ get_totalR <- function(inputRef){
   
   return(count)
 }
+
+get_total_sort <- function(inputRef){
+  df <- subset_by_refuge(df_total, inputRef)
+  return(nrow(df))
+}

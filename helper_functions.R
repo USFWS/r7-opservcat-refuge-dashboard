@@ -63,7 +63,7 @@ return_refprogram_list <- function(){
 #Advanced Search API call
 api_call <- function(params){
   #Make call
-  url <- "https://ecos.fws.gov/ServCatServices/servcat-secure/v4/rest/AdvancedSearch/Composite"
+  url <- "https://ecos.fws.gov/ServCatServices/servcat-secure/v4/rest/AdvancedSearch/Composite?top=1"
   body <- toJSON(params, auto_unbox = TRUE)
   response <- POST(url = url, config = authenticate(":",":","ntlm"), body = body, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
   
@@ -163,70 +163,4 @@ query_orgs <- function(ccc_list){
     filterRefuge <- append(filterRefuge, list(list(order = x-1, logicOperator = logic, unitCode = ccc_list[x])))
   }
   return(filterRefuge)
-}
-
-#Function: subset_by_refuge(inputDf, inputRef)
-#Takes a data frame (with a "Units" column of reference organization codes) and
-#subsets it into a data frame of references corresponding to a single, provided
-#refuge name
-subset_by_refuge <- function(inputDf, inputRef){
-  directory <- return_refuge_df()
-  index <- which(directory$names == inputRef)
-  cccs <- directory$codes[[index]]
-  single_refuge_subset <- inputDf[sapply(inputDf$Units, function(x) any(x %in% cccs)), ]
-  return(single_refuge_subset)
-}
-
-#Preexisting Function: nrow(inputDf)
-#Returns count of entries (rows) in a provided dataframe
-
-#Function: subset_by_keywords(inputDf, keywords, exclusions)
-#Given a dataframe, returns a subset of entries with titles that include the
-#provided keywords (as vector) and exclude the provided excluded words (as
-#vector)
-subset_by_title_keywords <- function(inputDf, keywords, exclusions){
-  directory <- return_refuge_df()
-  index <- which(directory$names == inputRef)
-  cccs <- directory$codes[[index]]
-  keyword_subset <- inputDf[grepl(paste(keywords, collapse = "|"), inputDf$Title, ignore.case = TRUE), ]
-  if (length(exclusions)>=1){
-    with_exclusions <- keyword_subset[!grepl(paste(exclusions, collapse = "|"), keyword_subset$Title, ignore.case = TRUE), ]
-  }else{
-    with_exclusions <- keyword_subset
-  }
-  return(with_exclusions)
-}
-
-#Function: return_r7NWRs_df()
-#Return master data frame for Advanced Search results for all references for
-#region 7 NWRS
-return_r7NWRs_df <- function(){
-  #Query for all R7 NWR references
-  params <- list(
-    units = query_orgs(unlist(return_refuge_df()$codes))
-  )
-  #Set up master data frame
-  json_output <- api_call(params)
-  titles <- json_output$items$title
-  ids <- json_output$items$referenceId
-  dates <- json_output$items$dateOfIssue
-  orgs <- json_output$items$units
-  df <- data.frame(ids, titles, dates, I(orgs))
-  colnames(df) <- c("RefID","Title","Date","Units")
-  #Return
-  return(df)
-}
-
-#Function: add_link_column(inputDf)
-#Given a data frame with a "RefID" column, returns the same data frame with
-#an added column of ServCat links using the reference ID values
-add_link_column <- function(inputDf){
-  links <- c()
-  for(i in 1:length(inputDf$RefID)){
-    id <- inputDf$RefID[i]
-    links <- append(links, paste("https://ecos.fws.gov/ServCat/Reference/Profile/", id, sep=""))
-  }
-  new_df <- cbind(inputDf, links)
-  colnames(new_df)[colnames(new_df) == "links"] <- "Link"
-  return(new_df)
 }

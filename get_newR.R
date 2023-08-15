@@ -22,3 +22,21 @@ get_newR <- function(inputRef){
   
   return(count)
 }
+
+get_new_sort <- function(inputRef){
+  df <- subset_by_refuge(dfs_by_year[[length(dfs_by_year)]], inputRef)
+  return(nrow(df))
+}
+
+get_last_year <- function(inputRef){
+  df <- subset_by_refuge(dfs_by_year[[length(dfs_by_year)-1]], inputRef)
+  return(nrow(df))
+}
+
+get_remaining <- function(inputRef){
+  remaining <- get_last_year(inputRef) - get_new_sort(inputRef) + 1
+  if(remaining < 0){
+    remaining <- 0
+  }
+  return(remaining)
+}

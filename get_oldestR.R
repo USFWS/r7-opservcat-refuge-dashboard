@@ -12,6 +12,13 @@ get_oldestR <- function(inputRef){
   return(year)
 }
 
+get_oldest_sort <- function(inputRef){
+  df <- subset_by_refuge(df_total, inputRef)
+  df <- df[order(df$Date, decreasing=FALSE),]
+  year <- substr(df$Date[1], 1, 4)
+  return(year)
+}
+
 
 
 

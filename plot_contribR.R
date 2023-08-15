@@ -50,3 +50,35 @@ plot_contribR <- function(inputRef, whichPlot){
   
   return(filesbyrefuge)
 }
+
+plot_contrib_sort <- function(inputRef){
+  years <- 2011:as.integer(format(Sys.Date(), "%Y"))
+  
+  yearCounts <- c()
+  prev <- 0
+  for(i in 1:length(dfs_by_year)){
+    df <- subset_by_refuge(dfs_by_year[[i]], inputRef)
+    yearCounts <- append(yearCounts, nrow(df) + prev)
+    prev <- yearCounts[length(yearCounts)]
+  }
+  
+  #Make graph
+  df <- data.frame(years, yearCounts)
+  library(ggplot2)
+  yearPlot <- ggplot(df,aes(x=years,y=yearCounts))+ 
+    geom_line(color = "dodgerblue4") +
+    geom_point(color = "dodgerblue4") +
+    scale_x_continuous(breaks = df$years, labels = df$years) +
+    labs(title = NULL, x = NULL, y = "Total References in ServCat\n") +
+    theme(
+      text=element_text(family = "sans"),
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 15, color = "white"),
+      axis.text.y = element_text(size = 15, color = "white"),
+      panel.background = element_rect(fill = "#CEE8F0"),
+      panel.grid.minor = element_blank(),
+      axis.title.y = element_text(color = "white", size = 18, face = "bold"),
+      plot.margin = margin(1,1.5,1,1, "cm"),
+      plot.background = element_blank()
+    )
+  return(yearPlot)
+}
