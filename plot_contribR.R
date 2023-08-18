@@ -62,23 +62,31 @@ plot_contrib_sort <- function(inputRef){
     prev <- yearCounts[length(yearCounts)]
   }
   
+  change <- c(0)
+  for(i in 2:length(yearCounts)){
+    change <- append(change, yearCounts[i] - yearCounts[i-1])
+  }
+  
   #Make graph
   df <- data.frame(years, yearCounts)
   library(ggplot2)
-  yearPlot <- ggplot(df,aes(x=years,y=yearCounts))+ 
-    geom_line(color = "dodgerblue4") +
-    geom_point(color = "dodgerblue4") +
+  yearPlot <- ggplot(df,aes(x=years,y=yearCounts,group=1,text=paste0("Cumulative Total: ",yearCounts," \nNew Additions: +",change)))+ 
+    #dodgerblue4, cee8f0
+    geom_line(color = "#0c3e6f") +
+    geom_point(color = "#0c3e6f") +
     scale_x_continuous(breaks = df$years, labels = df$years) +
     labs(title = NULL, x = NULL, y = "Total References in ServCat\n") +
     theme(
-      text=element_text(family = "sans"),
-      axis.text.x = element_text(angle = 45, hjust = 1, size = 15, color = "white"),
-      axis.text.y = element_text(size = 15, color = "white"),
-      panel.background = element_rect(fill = "#CEE8F0"),
+      #text=element_text(family = "mono"),
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 12, color = "white"),
+      axis.text.y = element_text(size = 12, color = "white"),
+      panel.background = element_rect(fill = "#dceef4"),
       panel.grid.minor = element_blank(),
-      axis.title.y = element_text(color = "white", size = 18, face = "bold"),
+      panel.grid.major = element_line(color = "#0072B2", size = 1.2),
+      axis.title.y = element_text(color = "white", size = 14, face = "bold"),
       plot.margin = margin(1,1.5,1,1, "cm"),
       plot.background = element_blank()
     )
-  return(yearPlot)
+  p <- ggplotly(yearPlot, tooltip = c("text"), height = 550) %>% config(displayModeBar = FALSE) %>% layout(paper_bgcolor = "rgba(0,0,0,0)", hoverlabel = list(font=list(size=17)))
+  return(p)
 }

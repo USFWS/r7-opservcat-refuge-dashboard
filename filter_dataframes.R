@@ -39,7 +39,26 @@ format_df <- function(inputDf){
   }
   new_df <- cbind(inputDf, links)
   colnames(new_df)[colnames(new_df) == "links"] <- "Link"
-  new_df <- new_df[-c(1,2,5)]
+  new_df <- new_df[-c(1,5)]
+  
+  for (i in 1:length(new_df$Type)){
+    if (grepl("Data", new_df$Type[i], fixed = TRUE)){
+      # if(grepl("Tabular", new_df$Type[i], fixed = TRUE)){
+      #   new_df$Type[i] <- "Data - tabular"
+      # }else if(grepl("Geospatial", new_df$Type[i], fixed = TRUE) || grepl("Raster", new_df$Type[i], fixed = TRUE)){
+      #   new_df$Type[i] <- "Data - spatial"
+      # }else{
+      #   new_df$Type[i] <- "Data"
+      # }
+      new_df$Type[i] <- "Data"
+    }else if(new_df$Type[i] != "Project"){
+      new_df$Type[i] <- "Document"
+    }
+  }
+  
+  new_df$Type <- as.factor(new_df$Type)
+  new_df$Date <- strtoi(new_df$Date)
+  
   return(new_df)
 }
 
@@ -52,7 +71,8 @@ format_df_download <- function(inputDf){
   }
   new_df <- cbind(inputDf, links)
   colnames(new_df)[colnames(new_df) == "links"] <- "Link"
-  new_df <- new_df[-c(1,2,5)]
+  new_df <- new_df[-c(1,5)]
+  
   return(new_df)
 }
 
@@ -228,13 +248,15 @@ plot_remaining <- function(inputRef){
   remaining <- ggplot(df, aes(x=factor(years), y=counts, fill = years)) +
     geom_bar(stat="identity", show.legend = FALSE, fill = c("black", "white")) +
     geom_text(aes(label=counts), vjust=1.4, color=c("white","black"), size=5, fontface='bold') +
+    #geom_hline(yintercept = counts[1], col = "red", size = 1.3, linetype = "dashed") +
     labs(x = NULL, y = "References Added") +
     theme(
       panel.background = element_blank(),
       plot.background = element_blank(),
-      axis.text.x = element_text(size = 16, color = "white"),
-      axis.text.y = element_text(size = 15, color = "white"),
-      axis.title.y = element_text(size = 15, color = "white", face = "bold")
+      axis.text.x = element_text(size = 17, color = "white"),
+      axis.text.y = element_text(size = 16, color = "white"),
+      axis.title.y = element_text(size = 17, color = "white", face = "bold", margin = margin(r = 10)),
+      plot.margin = unit(c(0.2,0.3,0.3,0.3), "cm")
     )
   #remaining
   return(remaining)

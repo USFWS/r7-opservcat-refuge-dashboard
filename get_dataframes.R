@@ -107,6 +107,8 @@ return_dflist_year <- function(){
   #by_year[[1]]$Title[1]
 }
 
+#Function: merge_dfs(df_list)
+#Given a list of dataframes, merge them into one
 merge_dfs <- function(df_list){
   df <- df_list[[1]]
   for (i in 2:length(df_list)){
@@ -115,6 +117,10 @@ merge_dfs <- function(df_list){
   return(df)
 }
 
+#Function: return_df_recents()
+#Returns dataframe with each of the refuge names and the corresponding most recent date
+#for creating a ServCat reference - by calling API for reference profiles of the
+#highest reference code values
 return_df_recents <- function(){
   refuges <- return_refuge_df()
   max_codes <- c()

@@ -38,6 +38,24 @@ plot_arlis_sort <- function(inputRef){
           panel.background = element_blank(),
           )
   
+  pie2 <- plot_ly(
+    df,
+    type="pie",
+    showlegend = FALSE,
+    labels = ~group,
+    values = ~value,
+    textposition = 'outside',
+    #textinfo = 'percent+label',
+    textinfo = 'text',
+    text = ~paste(percent, group),
+    hoverinfo = 'text',
+    hovertext = ~paste("\nCount: ", value),
+    height = 185, width = 300,
+    marker = list(colors = c("#FFFFFF", "black")),
+    textfont = list(color = "#FFFFFF", size = 14)
+    ) %>% config(displayModeBar = FALSE) %>% layout(paper_bgcolor = "rgba(0,0,0,0)", hoverlabel = list(font=list(size=15)), margin = list(l = 20, r = 35, t = 25, b = 45))
+  #pie2
+  
   # #Pie attempt 2
   # cat_var <- factor(c(rep("ARLIS", arlis), rep("Other", other)))
   # 
@@ -49,7 +67,7 @@ plot_arlis_sort <- function(inputRef){
   #          fill = c("#FFFFFF", "#56B4E9"),
   #          labels_cex = 0.6)
   
-  return(pie)
+  return(pie2)
 }
 
 get_arlis_sort <- function(inputRef){

@@ -33,7 +33,9 @@ ui <- dashboardPage(
       menuItem(selectInput(
         inputId = "dropdown",
         label = "Select Your Refuge:",
-        return_refuge_df()$names
+        c(" ", return_refuge_df()$names),
+        selected = NULL,
+        multiple = FALSE
         )
       ),
       menuItem("Stats", tabName = "stats", icon = icon("chart-simple")),
@@ -46,11 +48,17 @@ ui <- dashboardPage(
               tags$head(tags$style(
                 HTML("
                   .wrapper {height: auto !important; position:relative; overflow-x:hidden; overflow-y:hidden}
-                  .small-box {height:120px;}
+                  .small-box {height:120px; background-color: #0072B2 !important;}
                   .info-box {height:120px; color: black;}
+                  .info-box .info-box-icon {background-color: #0072B2 !important;}
+                  .box{background-color: #0072B2 !important;}
+                  .skin-blue .main-header .logo {background-color: #0072B2 !important;}
+                  .skin-blue .main-header .navbar {background-color: #0072B2 !important;}
                   ")
                 )
               ),
+              div(id = "message1", h1("Instructions"), h3("To view content, ", strong("select your refuge"), " on the menu to the left."), br(), h3(em("Note:")), h3(em("There are two pages to navigate to: \"Stats\" and \"Explore Topics\". You can toggle between the pages by clicking on their names in the menu. You are currently viewing the ", strong("Stats"), " page.")), h3(em("To collapse or expand the menu, click the three bars at the top of the screen."))),
+              hidden(div(id = "page1",
               fluidRow(
                 useShinyjs(),
                 use_shinyscroll(),
@@ -64,7 +72,7 @@ ui <- dashboardPage(
               fluidRow(
                 column(9,
                        box(h3(strong("Cumulative Total of References in ServCat Over Time"), style = "margin-bottom: 20px;"),
-                           withSpinner(plotOutput("contrib")),
+                           withSpinner(plotlyOutput("contrib")),
                            background = "light-blue", width = NULL, height = 640)
                        ),
                 column(3,
@@ -72,14 +80,14 @@ ui <- dashboardPage(
                          box(h1(strong(withSpinner(textOutput("remaining")))), h4("References Left to Add to Beat Last Year's Effort"), withSpinner(plotOutput("plotremaining")), height = 310, width = 12, background = "light-blue")
                                 ),
                        fluidRow(
-                         box(h1(strong(withSpinner(textOutput("arlis")))), h4("Operation ServCat Contributions"), h4(em("(Inputted by ARLIS)")), withSpinner(plotOutput("plotarlis")), background = "light-blue", width = 12, height = 310)
+                         box(h1(strong(withSpinner(textOutput("arlis")))), h4("Operation ServCat Contributions"), h5(em("(Inputted by ARLIS)")), withSpinner(plotlyOutput("plotarlis")), background = "light-blue", width = 12, height = 310)
                                 )
                         )
-              )
+              )))
       ), tabItem(tabName = "topics",
                  tags$head(tags$style(
                    HTML("
-                  .rowchart{height:380px;}
+              
                   .rowtitle{height:100px;}
                   .rowresults{height:100px;}
                   .rowdownloads{height:60px;}
@@ -123,10 +131,16 @@ ui <- dashboardPage(
                     transform: scale(2, 1);
                   }
                   "),
+                   #.rowchart{height:380px;}
                   )
                  ),
+                 div(id = "message2", h1("Instructions"), h3("To view content, ", strong("select your refuge"), " on the menu to the left."), br(), h3(em("Note:")), h3(em("There are two pages to navigate to: \"Stats\" and \"Explore Topics\". You can toggle between the pages by clicking on their names in the menu. You are currently viewing the ", strong("Explore Topics"), " page.")), h3(em("To collapse or expand the menu, click the three bars at the top of the screen."))),
+                 hidden(div(id = "page2",
                  fluidRow(class = "rowchart",
-                   column(6, offset = 3, align="center", withSpinner(plotOutput("topicPlot")), style = "margin-bottom:-190px;")
+                   column(6, offset = 3, align="center", div(id = "topicPlot", withSpinner(plotOutput("topicPlot")), style = "height: 380px;")) #margin-bottom:-190px; 
+                 ),
+                 fluidRow(
+                   column(12, align="center", checkboxInput("checkbox", "Show/hide plot", value = TRUE))
                  ),
                  fluidRow(class = "rowbar",
                    column(6, offset = 3, align = "center", div(id = "bar", tags$hr(style="border-color: black;")))
@@ -148,7 +162,7 @@ ui <- dashboardPage(
                           )),
                           hidden(div(id="ungSet",
                               #div(class = "triangle1", span("▼")),
-                              div(class="picker1", pickerInput("ungSelect", choices = c("Bison", "Caribou", "Deer", "Elk", "Goats", "Moose", "Muskox", "Sheep"), label = "Select an ungulate", options = pickerOptions(maxOptions = 1), selected = NULL, multiple = TRUE, width = "170px"))
+                              div(class="picker1", pickerInput("ungSelect", choices = c("Bison", "Caribou", "Deer", "Elk", "Goats", "Moose", "Muskoxen", "Sheep"), label = "Select an ungulate", options = pickerOptions(maxOptions = 1), selected = NULL, multiple = TRUE, width = "170px"))
                           )),
                           hidden(div(id="cetSet",
                               #div(class = "triangle1", span("▼")),
@@ -191,9 +205,9 @@ ui <- dashboardPage(
                  ),
                  fluidRow(class = "rowtable",
                           column(12,
-                                 DT::dataTableOutput("titleTable")
+                                 hidden(div(id = "table", withSpinner(DT::dataTableOutput("titleTable"))))
                                  )
-                 )
+                 )))
       )
     )
   )
@@ -208,10 +222,12 @@ server <- function(input, output, session) {
   getDropdown <- reactiveVal(NULL)
   getSelection <- reactiveVal(NULL)
   clickNum <- reactiveVal(0)
+  begin <- reactiveVal(0)
   
-  output$contrib <- renderPlot({
+  output$contrib <- renderPlotly({
     plot_contrib_sort(input$dropdown)
-  }, height = 550, bg = "transparent")
+  })
+  #}, height = 550, bg = "transparent")
   
   output$total <- renderText({
     get_total_sort(input$dropdown)
@@ -221,17 +237,14 @@ server <- function(input, output, session) {
     get_new_sort(input$dropdown)
   })
   
-  # output$oldest <- renderText({
-  #   get_oldest_sort(input$dropdown)
-  # })
-  
   output$arlis <- renderText({
     get_arlis_sort(input$dropdown)
   })
   
-  output$plotarlis <- renderPlot({
+  output$plotarlis <- renderPlotly({
     plot_arlis_sort(input$dropdown)
-  }, height = 180, width = 250, bg = "transparent")
+  })
+  #}, height = 180, width = 250, bg = "transparent")
   
   output$project <- renderText({
     get_project_count(input$dropdown)
@@ -261,14 +274,6 @@ server <- function(input, output, session) {
     plot_remaining(input$dropdown)
   }, height = 180, width = 250, bg = "transparent")
   
-  # output$subjects <- renderPlot({
-  #   plot_subjectsR(input$dropdown)
-  # })
-  
-  # output$group <- renderPlot({
-  #   plot_groupR(input$dropdown)
-  # })
-  
   #Functions for topic querying
   clickActions <- function(refuge, selection){
     count <- return_title_count(refuge, selection)
@@ -279,15 +284,17 @@ server <- function(input, output, session) {
         getCodes(return_unformatted_df(refuge, selection))
         formatteddf <- return_title_table(refuge, selection)
         getExcel(return_title_table_download(refuge, selection))
-        DT::datatable(formatteddf, escape = FALSE, selection = 'none', rownames = FALSE)
+        DT::datatable(formatteddf, filter = "none", escape = FALSE, selection = 'none', rownames = FALSE, options = list(searchHighlight = TRUE))
       }
-    })
+    }, server=FALSE)
     if(count != 0){
       shinyjs::show("downloadCodes")
       shinyjs::show("downloadExcel")
+      shinyjs::show("table")
     }else{
       shinyjs::hide("downloadCodes")
       shinyjs::hide("downloadExcel")
+      shinyjs::hide("table")
     }
   }
   
@@ -314,12 +321,28 @@ server <- function(input, output, session) {
   
   #Refuge Dropdown
   observeEvent(input$dropdown, {
-    getDropdown(input$dropdown)
-    #runjs("$(document).ready(function(){$('#recentbox').click(function(){window.open('https://ecos.fws.gov/ServCat/Reference/Profile/154365', '_blank');});});")
-    delay(100, addPopover(session, id = "projectbox", title = NULL, content = "Click on box to view in ServCat.", placement = "top", trigger = "hover"))
-    delay(100, addPopover(session, id = "recentbox", title = NULL, content = "Click on box to view in ServCat.", placement = "top", trigger = "hover"))
-    if(clickNum() > 0){
-      clickActions(input$dropdown, getSelection())
+    if(begin() > 0){
+      shinyjs::show("page1")
+      shinyjs::hide("message1")
+      shinyjs::show("page2")
+      shinyjs::hide("message2")
+      getDropdown(input$dropdown)
+      #runjs("$(document).ready(function(){$('#recentbox').click(function(){window.open('https://ecos.fws.gov/ServCat/Reference/Profile/154365', '_blank');});});")
+      delay(100, addPopover(session, id = "projectbox", title = NULL, content = "Click on box to view in ServCat.", placement = "top", trigger = "hover"))
+      delay(100, addPopover(session, id = "recentbox", title = NULL, content = "Click on box to view in ServCat.", placement = "top", trigger = "hover"))
+      if(clickNum() > 0){
+        clickActions(input$dropdown, getSelection())
+      }
+    }
+    begin(begin() + 1)
+  })
+  
+  #Checkbox
+  observeEvent(input$checkbox, {
+    if(input$checkbox == FALSE){
+      shinyjs::hide("topicPlot")
+    }else{
+      shinyjs::show("topicPlot")
     }
   })
   
