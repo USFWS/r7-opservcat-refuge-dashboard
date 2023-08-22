@@ -22,7 +22,7 @@
     "repositoryURL": "https://github.com/USFWS/r7-opservcat-refuge-dashboard/r7-repo-template.git",
     "vcs": "git",
 
-    "laborHours": 30,
+    "laborHours": 150,
 
     "tags": [
       "r7",
@@ -43,7 +43,7 @@
     },
 
     "date": {
-      "metadataLastUpdated": "2023-06-10"
+      "metadataLastUpdated": "2023-08-21"
     }
   }
 ]
