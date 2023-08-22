@@ -6,10 +6,19 @@ The **r7-opservcat-refuge-dashboard** is an R shiny application for monitoring t
 
 ## Requirements
 
-* R with the following packages installed:
+* R version 4.2.3 and RStudio 2023.03.0+386 with the following packages installed:
   * ``shiny``
   * ``shinydashboard``
+  * ``shinyjs``
+  * ``shinycssloaders``
+  * ``shinyWidgets``
+  * ``shinyscroll``
+  * ``shinyBS``
   * ``jsonlite``
+  * ``httr``
+  * ``plotly``
+  * ``ggplot2``
+  * ``ggrepel``
 
 ## Usage
 

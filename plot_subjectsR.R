@@ -5,26 +5,6 @@ plot_subjectsR <- function(inputRef){
   library(ggplot2)
   library(treemapify)
   
-  #inputRef <- "Togiak"
-  
-  #Make dataframe of refuge ccc's
-  refCodes <- c("RAM0","RAP0","RARC","RIZM","RKAN","RKNA","RKU0","RKDK","RSWK","RTET","RTGK","RYKD","RYKF")
-  refShorts <- c("AM","APB","Arc","Iz","Kan","Ken","KNI","Kod","Sel","Tet","Tog","YKD","YKF")
-  refNames <- c("Alaska Maritime",
-                "APB",
-                "Arctic",
-                "Izembek",
-                "Kanuti",
-                "Kenai",
-                "KNI",
-                "Kodiak",
-                "Selawik",
-                "Tetlin",
-                "Togiak",
-                "Yukon Delta",
-                "Yukon Flats")
-  refDir <- data.frame(refCodes, refShorts, refNames)
-  
   #Get subject category list
   url <- "https://ecos.fws.gov/ServCatServices/servcat-secure/v4/rest/FixedList/SubjectCategories"
   response <- GET(url = url, config = authenticate(":",":","ntlm"), encode = "json", add_headers("Content-Type" = "application/json"), verbose())
@@ -42,41 +22,22 @@ plot_subjectsR <- function(inputRef){
   #API request for category counts by refuge
   #bio = 1009 to 1038
   refuge_df <- data.frame()
-  
-  ccc <- paste("FF07", refDir$refCodes[refDir$refNames == inputRef], "00", sep = "")
-  
   for(x in 1009:1038){
-    filterRefuge <- list(
-      order = 0,
-      logicOperator = "",
-      unitCode = ccc
-    )
-    
     filterSubCat <- list(
       order = 0,
       logicOperator = "",
       subjectCategory = x
     )
-    
-    #Define url and params for API request
-    url <- "https://ecos.fws.gov/ServCatServices/servcat-secure/v4/rest/AdvancedSearch"
+
     params <- list(
-      units = list(filterRefuge),
+      units = query_refuge(inputRef),
       subjectCategories = list(filterSubCat)
     )
-    body <- toJSON(params, auto_unbox = TRUE)
-    response <- POST(url = url, config = authenticate(":",":","ntlm"), body = body, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
     
-    #Halt code if error
-    if(http_error(response) == TRUE){
-      stop("This request has failed.")
-    }
-    
-    #Continue if no error
-    json_output <- fromJSON((content(response, as = "text")))
+    json_output <- api_call(params)
     count <- json_output$pageDetail$totalCount
     
-    refuge_df<- rbind(refuge_df, c(x,subcatsdf$label[subcatsdf$key == x],count))
+    refuge_df <- rbind(refuge_df, c(x,subcatsdf$label[subcatsdf$key == x],count))
   }
   
   colnames(refuge_df) <- c("key","label","count")
