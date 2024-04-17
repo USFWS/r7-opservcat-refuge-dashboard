@@ -1,6 +1,5 @@
 #Function: return_refuge_df()
 #Returns data frame with refuge names, abbreviations, and cost center codes
-
 return_refuge_df <- function(){
   refNames <- c("Alaska Maritime",
                 "Alaska Peninsula/Becharof",
@@ -56,44 +55,6 @@ return_refprogram_list <- function(){
     allCCC[x] <- paste("FF07R", allCCC[x], "00", sep = "")
   }
   return(allCCC)
-}
-
-#Function: api_call(params)
-#Takes list of parameters formatted as json and returns the result of an
-#Advanced Search API call
-api_call <- function(params){
-  #Make call
-  url <- "https://ecos.fws.gov/ServCatServices/servcat-secure/v4/rest/AdvancedSearch/Composite?top=1"
-  body <- toJSON(params, auto_unbox = TRUE)
-  response <- POST(url = url, config = authenticate(":",":","ntlm"), body = body, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
-  
-  #Halt code if error
-  if(http_error(response) == TRUE){
-    stop("This request has failed.")
-  }
-  
-  #Convert output from json for parsing
-  json_output <- fromJSON((content(response, as = "text")))
-  return(json_output)
-}
-
-#Function: api_call_sort(params)
-#Takes list of parameters formatted as json and returns the result of an
-#Advanced Search API call with url modified for sorting by date ascending
-api_call_sort <- function(params){
-  #Make call
-  url <- "https://ecos.fws.gov/ServCatServices/servcat-secure/v4/rest/AdvancedSearch/Composite?orderby=DateOfIssue&sort=ASC"
-  body <- toJSON(params, auto_unbox = TRUE)
-  response <- POST(url = url, config = authenticate(":",":","ntlm"), body = body, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
-  
-  #Halt code if error
-  if(http_error(response) == TRUE){
-    stop("This request has failed.")
-  }
-  
-  #Convert output from json for parsing
-  json_output <- fromJSON((content(response, as = "text")))
-  return(json_output)
 }
 
 #Function: query_refuge(refugeName)

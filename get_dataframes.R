@@ -1,9 +1,3 @@
-#Global variable data frames for filtering (initial api calls)
-# df_arlis <- return_df_arlis()
-# dfs_by_year <- return_dflist_year()
-# df_total <- merge_dfs(dfs_by_year)
-# df_recents <- return_df_recents()
-
 #API calls made to obtain data frames when initializing app
 
 #Function: api_call_long(params)
@@ -14,6 +8,7 @@ api_call_long <- function(params){
   url <- "https://ecos.fws.gov/ServCatServices/servcat-secure/v4/rest/AdvancedSearch/Composite?top=5000"
   body <- toJSON(params, auto_unbox = TRUE)
   response <- POST(url = url, config = authenticate(":",":","ntlm"), body = body, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
+  #response <- POST(url = url, body = body, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
   
   #Halt code if error
   if(http_error(response) == TRUE){
@@ -41,6 +36,7 @@ api_call_profile <- function(codelist){
   
   #Make call
   response <- GET(url = url, config = authenticate(":",":","ntlm"), encode = "json", add_headers("Content-Type" = "application/json"), verbose())
+  #response <- GET(url = url, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
   
   #Halt code if error
   if(http_error(response) == TRUE){
@@ -66,17 +62,6 @@ return_df <- function(params){
   df <- data.frame(ids, types, titles, dates, I(orgs))
   colnames(df) <- c("RefID","Type","Title","Date","Units")
   return(df)
-}
-
-#OBSOLETE
-#Function: return_df_total()
-#Return data frame for Advanced Search results for all references of
-#region 7 NWRS
-return_df_total <- function(){
-  params <- list(
-    units = query_orgs(unlist(return_refuge_df()$codes))
-  )
-  return(return_df(params))
 }
 
 #Function: return_df_arlis()
