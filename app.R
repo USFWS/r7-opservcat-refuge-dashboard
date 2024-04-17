@@ -12,17 +12,14 @@ library(ggplot2)
 library(shinyscroll)
 library(shinyBS)
 library(ggrepel)
+library(data.tree)
+library(tidyverse)
 
-source("plot_contribR.R")
-source("get_totalR.R")
-source("get_newR.R")
-source("get_oldestR.R")
-source("plot_subjectsR.R")
-source("plot_groupR.R")
 source("helper_functions.R")
 source("get_dataframes.R")
-source("plot_arlisR.R")
 source("filter_dataframes.R")
+source("global.R")
+source("ui_outputs.R")
 
 #UI
 ui <- dashboardPage(
@@ -48,16 +45,16 @@ ui <- dashboardPage(
               tags$head(tags$style(
                 HTML("
                   .wrapper {height: auto !important; position:relative; overflow-x:hidden; overflow-y:hidden}
-                  .small-box {height:120px; background-color: #0072B2 !important;}
+                  .small-box {height:120px; background-color: #377CA4 !important;}
                   .info-box {height:120px; color: black;}
-                  .info-box .info-box-icon {background-color: #0072B2 !important;}
-                  .box{background-color: #0072B2 !important;}
-                  .skin-blue .main-header .logo {background-color: #0072B2 !important;}
-                  .skin-blue .main-header .navbar {background-color: #0072B2 !important;}
+                  .info-box .info-box-icon {background-color: #377CA4 !important;}
+                  .box{background-color: #377CA4 !important;}
+                  .skin-blue .main-header .logo {background-color: #2A5F7E !important;}
+                  .skin-blue .main-header .navbar {background-color: #2A5F7E !important;}
                   ")
                 )
               ),
-              div(id = "message1", h1("Instructions"), h3("To view content, ", strong("select your refuge"), " on the menu to the left."), br(), h3(em("Note:")), h3(em("There are two pages to navigate to: \"Stats\" and \"Explore Topics\". You can toggle between the pages by clicking on their names in the menu. You are currently viewing the ", strong("Stats"), " page.")), h3(em("To collapse or expand the menu, click the three bars at the top of the screen."))),
+              div(id = "message1", h1("Instructions"), h3("To view content, ", strong("select your refuge"), " on the menu to the left."), br(), h3(tags$u("NOTE")), h3(em("There are two pages to navigate to: \"Stats\" and \"Explore Topics\". You can toggle between the pages by clicking on their names in the menu. You are currently viewing the ", strong("Stats"), " page.")), h3(em("To collapse or expand the menu, click the three bars at the top of the screen."))),
               hidden(div(id = "page1",
               fluidRow(
                 useShinyjs(),
@@ -80,7 +77,7 @@ ui <- dashboardPage(
                          box(h1(strong(withSpinner(textOutput("remaining")))), h4("References Left to Add to Beat Last Year's Effort"), withSpinner(plotOutput("plotremaining")), height = 310, width = 12, background = "light-blue")
                                 ),
                        fluidRow(
-                         box(h1(strong(withSpinner(textOutput("arlis")))), h4("Operation ServCat Contributions"), h5(em("(Inputted by ARLIS)")), withSpinner(plotlyOutput("plotarlis")), background = "light-blue", width = 12, height = 310)
+                         box(h1(strong(withSpinner(textOutput("arlis")))), h4("Operation ServCat Contributions"), h5("(", em("Inputted by ARLIS", .noWS = c('before','after')), ")"), withSpinner(plotlyOutput("plotarlis")), background = "light-blue", width = 12, height = 310)
                                 )
                         )
               )))
@@ -89,8 +86,8 @@ ui <- dashboardPage(
                    HTML("
               
                   .rowtitle{height:100px;}
-                  .rowresults{height:100px;}
-                  .rowdownloads{height:60px;}
+                  .rowresults{height:130px; vertical-align:top;}
+                  .rowdownloads{height:70px;}
                   
                   .picker1 {
                     border: 2px solid #0072B2;
@@ -130,14 +127,27 @@ ui <- dashboardPage(
                     font-size: 20px;
                     transform: scale(2, 1);
                   }
+                  
+                  .btn-classFilter {
+                    background-color:#377CA4;
+                    border-color:#D3D3D3;
+                    border-width: 1px;
+                    color:#FFFFFF;
+                    font-size:17px;
+                    border-radius: 20px;
+                    height: 50px;
+                    text-align: center;
+                    display:table-cell;
+                    vertical-align:middle;
+                  }
                   "),
-                   #.rowchart{height:380px;}
+                  #.rowchart{height:380px;}
                   )
                  ),
-                 div(id = "message2", h1("Instructions"), h3("To view content, ", strong("select your refuge"), " on the menu to the left."), br(), h3(em("Note:")), h3(em("There are two pages to navigate to: \"Stats\" and \"Explore Topics\". You can toggle between the pages by clicking on their names in the menu. You are currently viewing the ", strong("Explore Topics"), " page.")), h3(em("To collapse or expand the menu, click the three bars at the top of the screen."))),
+                 div(id = "message2", h1("Instructions"), h3("To view content, ", strong("select your refuge"), " on the menu to the left."), br(), h3(tags$u("NOTE")), h3(em("There are two pages to navigate to: \"Stats\" and \"Explore Topics\". You can toggle between the pages by clicking on their names in the menu. You are currently viewing the ", strong("Explore Topics"), " page.")), h3(em("To collapse or expand the menu, click the three bars at the top of the screen."))),
                  hidden(div(id = "page2",
                  fluidRow(class = "rowchart",
-                   column(6, offset = 3, align="center", div(id = "topicPlot", withSpinner(plotOutput("topicPlot")), style = "height: 380px;")) #margin-bottom:-190px; 
+                   column(6, offset = 3, align="center", div(id = "topicPlotDiv", plotOutput("topicPlot") %>% withSpinner(), style = "height: 380px;")) #margin-bottom:-190px; 
                  ),
                  fluidRow(
                    column(12, align="center", checkboxInput("checkbox", "Show/hide plot", value = TRUE))
@@ -196,12 +206,17 @@ ui <- dashboardPage(
                  ),
                  fluidRow(class = "rowresults",
                    hidden(div(id = "topicResults",
-                       p(br(),style="text-align: center; font-size: 25px;","Your refuge has", strong(textOutput("topicCount",inline = TRUE)),"documents preserved", br(), "with the subject of", strong(textOutput("topicName", inline = TRUE)))
+                       p(br(),style="text-align: center; font-size: 25px;","Your refuge has", strong(textOutput("topicCount",inline = TRUE)),"items preserved", br(), "with the subject of", strong(textOutput("topicName", inline = TRUE)))
                    ))
                  ),
                  fluidRow(class = "rowdownloads",
-                          column(3, align="left", hidden(downloadButton("downloadExcel", "Download Table (.csv)", icon = shiny::icon("download"), width = 12, style = "background-color:#5A5A5A; border-color:#5A5A5A; color:#FFFFFF; font-size:17px"))),
-                          column(3, align="right", offset = 6, hidden(downloadButton("downloadCodes", "Download Reference Codes (.txt)", icon = shiny::icon("download"), width = 12, style = "background-color:#5A5A5A; border-color:#5A5A5A; color:#FFFFFF; font-size:17px")))
+                          column(4, align="left",
+                                 div(style = "display:inline-block; vertical-align:top;", dropdownButton(status = "classFilter", inputId = "filterbutton", label = "Select Types of References to Display", circle = FALSE, checkboxGroupInput(inputId = "filter", label = NULL, choices = c("Document", "Project", "Data", "Media"), selected = c("Document", "Project", "Data", "Media"))))
+                                 ),
+                          column(6, align="right", offset=2,
+                                 div(style = "display:inline-block; vertical-align:top;", hidden(downloadButton("downloadExcel", "Download Table (.csv)", icon = shiny::icon("download"), width = 12, style = "background-color:#377CA4; border-color:#D3D3D3; border-width: 1px; color:#FFFFFF; font-size:17px; border-radius: 20px; height: 50px; text-align: center; display:table-cell; vertical-align:middle;"))),
+                                 div(style = "display:inline-block; vertical-align:top;", hidden(downloadButton("downloadCodes", "Download Reference Codes (.txt)", icon = shiny::icon("download"), width = 12, style = "background-color:#377CA4; border-color:#D3D3D3; border-width: 1px; color:#FFFFFF; font-size:17px; border-radius: 20px; height: 50px; text-align: center; display:table-cell; vertical-align:middle;")))
+                                 )
                  ),
                  fluidRow(class = "rowtable",
                           column(12,
@@ -284,14 +299,21 @@ server <- function(input, output, session) {
         getCodes(return_unformatted_df(refuge, selection))
         formatteddf <- return_title_table(refuge, selection)
         getExcel(return_title_table_download(refuge, selection))
+        formatteddf <- formatteddf[which(formatteddf$Type %in% input$filter),]
+        if(nrow(formatteddf)>0){
+          formatteddf$Title <- paste0("<b>", formatteddf$Title, "</b>")
+          formatteddf$Type <- paste0("<em>", formatteddf$Type, "</em>")
+        }
         DT::datatable(formatteddf, filter = "none", escape = FALSE, selection = 'none', rownames = FALSE, options = list(searchHighlight = TRUE))
       }
     }, server=FALSE)
     if(count != 0){
+      shinyjs::show("filterbutton")
       shinyjs::show("downloadCodes")
       shinyjs::show("downloadExcel")
       shinyjs::show("table")
     }else{
+      shinyjs::hide("filterbutton")
       shinyjs::hide("downloadCodes")
       shinyjs::hide("downloadExcel")
       shinyjs::hide("table")
@@ -340,9 +362,9 @@ server <- function(input, output, session) {
   #Checkbox
   observeEvent(input$checkbox, {
     if(input$checkbox == FALSE){
-      shinyjs::hide("topicPlot")
+      shinyjs::hide("topicPlotDiv")
     }else{
-      shinyjs::show("topicPlot")
+      shinyjs::show("topicPlotDiv")
     }
   })
   
@@ -354,9 +376,9 @@ server <- function(input, output, session) {
     resetButtons()
     shinyjs::show("topicResults")
     shinyjs::show("mamSet")
-    if(clickNum() == 0){
+    #if(clickNum() == 0){
       delay(500, scroll("bar"))
-    }
+    #}
     clickNum(clickNum() + 1)
   })
   
@@ -407,9 +429,9 @@ server <- function(input, output, session) {
     resetButtons()
     shinyjs::show("birdSet")
     shinyjs::show("topicResults")
-    if(clickNum() == 0){
+    #if(clickNum() == 0){
       delay(500, scroll("bar"))
-    }
+    #}
     clickNum(clickNum() + 1)
   })
   
@@ -452,9 +474,9 @@ server <- function(input, output, session) {
     resetButtons()
     shinyjs::show("fishSet")
     shinyjs::show("topicResults")
-    if(clickNum() == 0){
+    #if(clickNum() == 0){
       delay(500, scroll("bar"))
-    }
+    #}
     clickNum(clickNum() + 1)
   })
   
@@ -474,9 +496,9 @@ server <- function(input, output, session) {
     resetButtons()
     shinyjs::show("moreSet")
     shinyjs::show("topicResults")
-    if(clickNum() == 0){
+    #if(clickNum() == 0){
       delay(500, scroll("bar"))
-    }
+    #}
     clickNum(clickNum() + 1)
   })
   
@@ -492,7 +514,7 @@ server <- function(input, output, session) {
   output$downloadExcel <- downloadHandler(
     filename = "ref_table.csv",
     content = function(file){
-      write.csv(getExcel(), file)
+      write.csv(getExcel(), file, row.names = FALSE)
     }
   )
   

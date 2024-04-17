@@ -1,5 +1,3 @@
-library(data.tree)
-
 #Function: subset_by_refuge(inputDf, inputRef)
 #Takes a data frame (with a "Units" column of reference organization codes) and
 #subsets it into a data frame of references corresponding to a single, provided
@@ -17,6 +15,17 @@ subset_by_refuge <- function(inputDf, inputRef){
 #provided keywords (as vector) and exclude the provided excluded words (as
 #vector)
 subset_by_title_keywords <- function(inputDf, keywords, exclusions){
+  # keywords <- paste("\\<",keywords,"\\>",sep="")
+  # exclusions <- paste("\\<",exclusions,"\\>",sep="")
+  
+  # keyword_subset <- inputDf[grepl(paste(paste0("\\<",keywords,"\\>"), collapse = "|"), inputDf$Title, ignore.case = TRUE), ]
+  # if (length(exclusions)>0){
+  #   with_exclusions <- keyword_subset[!grepl(paste(paste0("\\<",exclusions,"\\>"), collapse = "|"), keyword_subset$Title, ignore.case = TRUE), ]
+  # }else{
+  #   with_exclusions <- keyword_subset
+  # }
+  # return(with_exclusions)
+  
   keyword_subset <- inputDf[grepl(paste(keywords, collapse = "|"), inputDf$Title, ignore.case = TRUE), ]
   if (length(exclusions)>0){
     with_exclusions <- keyword_subset[!grepl(paste(exclusions, collapse = "|"), keyword_subset$Title, ignore.case = TRUE), ]
@@ -52,7 +61,16 @@ format_df <- function(inputDf){
       # }
       new_df$Type[i] <- "Data"
     }else if(new_df$Type[i] != "Project"){
-      new_df$Type[i] <- "Document"
+      media <- c("Photograph", "Image", "Presentation", "Map", "Presentation", "Audio", "Media", "Video", "Website")
+      for(val in media){
+        if(grepl(val, new_df$Type[i], fixed = TRUE)){
+          new_df$Type[i] <- "Media"
+          break
+        }
+      }
+      if(new_df$Type[i] != "Media"){
+        new_df$Type[i] <- "Document"
+      }
     }
   }
   
@@ -116,7 +134,7 @@ build_tree <- function(){
         land$AddChild("Passerine", keywords = c("passerine", "songbird", "song bird", "christmas bird", "cardinal", "sparrow", "chickadee", "corvid", "magpie", "raven", "flycatcher", "blackbird"), exclusions = c())
         land$AddChild("Landfowl", keywords = c("landfowl", "gamefowl", "grouse", "ptarmigan"), exclusions = c())
       water <- bird$AddChild("Waterbirds", keywords = c("waterbird", "water bird"), exclusions = c())
-        water$AddChild("Waterfowl", keywords = c("duck", "goose", "geese", "swan", "brant", "shoveler", "pintail", "scaup", "eider", "scoter", "goldeneye", "dabbler", "canvasback"), exclusions = c("duck island"))
+        water$AddChild("Waterfowl", keywords = c("duck", "goose", "geese", "swan", "brant", "shoveler", "pintail", "scaup", "eider", "scoter", "goldeneye", "dabbler", "canvasback"), exclusions = c("duck island", "swanson", "swan lake", "duckweed"))
         water$AddChild("Seabirds", keywords = c("sea bird", "seabird", "marine bird", "pelagic bird", "auk", "puffin", "murrelet", "gull", "tern"), exclusions = c("eastern", "pattern"))
         water$AddChild("Shorebirds/Wading Birds", keywords = c("shorebird", "shore bird", "wading bird", "godwit", "sandpiper", "whimbrel", "oystercatcher", "turnstone", "curlew", "dunlin", "crane"), exclusions = c())
         water$AddChild("Cormorants and Loons", keywords = c("cormorant", "loon"), exclusions = c())
@@ -134,7 +152,7 @@ build_tree <- function(){
       more$AddChild("Amphibians", keywords = c("frog", "amphibian"), exclusions = c())
       more$AddChild("Invertebrates", keywords = c("pollinator", "invertebrate", "bee ", "dragonfly", "arthropod", "spider", "beetle", "mussel"), exclusions = c())
       more$AddChild("Disease", keywords = c("disease", "influenza", "virus"), exclusions = c())
-      more$AddChild("Disturbance", keywords = c("disturbance", "vehicle", "seismic", "petroleum", "oil spill", "hydroelectric", "hydrocarbon"), exclusions = c("national petroleum reserve"))
+      more$AddChild("Disturbance", keywords = c("disturbance", "vehicle", "seismic", "petroleum", "oil spill", "hydroelectric", "hydrocarbon", "mining"), exclusions = c("national petroleum reserve", "determining", "data mining"))
       more$AddChild("Climate/Climate Change", keywords = c("carbon", "permafrost", "thermokarst", "glacial retreat", "thaw slump", "climate", "gloria", "ecological change"), exclusions = c("hydrocarbon"))
       more$AddChild("Wilderness", keywords = c("wilderness"), exclusions = c())
       
@@ -149,6 +167,7 @@ get_button_keywords <- function(buttonName){
   if (length(node$leaves) > 1){
     keywords <- append(keywords, unique(unlist(sapply(node$leaves, function(child) child$keywords))))
   }
+  
   return(keywords)
 }
 
@@ -159,6 +178,7 @@ get_button_exclusions <- function(buttonName){
   if (length(node$leaves) > 1){
     exclusions <- append(exclusions, unique(unlist(sapply(node$leaves, function(child) child$exclusions))))
   }
+
   return(exclusions)
 }
 
@@ -197,81 +217,3 @@ make_refcode_file <- function(inputDf, file){
 }
 
 #make_refcode_file(df_arlis, "output.txt")
-
-get_project_count <- function(inputRef){
-  df <- subset_by_refuge(df_total, inputRef)
-  count <- length(which(df$Type == "Project"))
-  return(count)
-}
-
-plot_topics <- function(inputRef){
-  categories <- c("Mammals", "Birds", "Fish", "More")
-  counts <- c()
-  for(x in categories){
-    counts <- append(counts, return_title_count(inputRef, x))
-  }
-  categories[4] <- "More Topics"
-  df <- data.frame(categories, counts)
-  df$categories <- factor(df$categories, levels = df$categories)
-  topicPlot <- ggplot(df,aes(x=categories,y=counts,fill=categories))+ 
-    geom_bar(stat="identity", show.legend = FALSE) +
-    scale_fill_manual(values = c("#0072B2", "#E69F00", "#009E73", "#CC79A7")) +
-    labs(title = NULL, x = NULL, y = "ServCat References\n") +
-    theme(
-      text=element_text(family = "sans"),
-      axis.text.x = element_text(angle = 30, hjust = 1, size = 20),
-      axis.text.y = element_text(size = 15),
-      panel.background = element_blank(),
-      panel.grid.minor = element_blank(),
-      axis.title.y = element_text(size = 17),
-      plot.margin = margin(1,1.5,1,1, "cm"),
-      plot.background = element_blank()
-    )
-  # topicPlot <- ggplotly(topicPlot)
-  return(topicPlot)
-}
-
-get_most_recent <- function(inputRef){
-  index <- which(df_recents$names == inputRef)
-  return(df_recents$dates[index])
-}
-
-#plot_topics("Kenai")
-#get_most_recent("Kenai")
-
-plot_remaining <- function(inputRef){
-  #inputRef <- "Togiak"
-  currentYear <- as.integer(format(Sys.Date(), "%Y"))
-  years <- c(currentYear - 1, currentYear)
-  counts <- c(get_last_year(inputRef), get_new_sort(inputRef))
-  df <- data.frame(years, counts)
-  remaining <- ggplot(df, aes(x=factor(years), y=counts, fill = years)) +
-    geom_bar(stat="identity", show.legend = FALSE, fill = c("black", "white")) +
-    geom_text(aes(label=counts), vjust=1.4, color=c("white","black"), size=5, fontface='bold') +
-    #geom_hline(yintercept = counts[1], col = "red", size = 1.3, linetype = "dashed") +
-    labs(x = NULL, y = "References Added") +
-    theme(
-      panel.background = element_blank(),
-      plot.background = element_blank(),
-      axis.text.x = element_text(size = 17, color = "white"),
-      axis.text.y = element_text(size = 16, color = "white"),
-      axis.title.y = element_text(size = 17, color = "white", face = "bold", margin = margin(r = 10)),
-      plot.margin = unit(c(0.2,0.3,0.3,0.3), "cm")
-    )
-  #remaining
-  return(remaining)
-}
-
-get_recent_link <- function(inputRef){
-  df <- df_recents
-  code <- df$ids[which(df$names == inputRef)]
-  return(code)
-}
-
-get_savedsearch_link <- function(inputRef){
-  names <- return_refuge_df()$names
-  nums <- c(2589, 2590, 2591, 2592, 2593, 2594, 2588, 2595, 2587, 2586, 2596, 2597, 2598)
-  df <- data.frame(names, nums)
-  code <- df$nums[which(df$names == inputRef)]
-  return(code)
-}
