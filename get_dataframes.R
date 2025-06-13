@@ -5,10 +5,10 @@
 #Advanced Search API call with page length 5000
 api_call_long <- function(params){
   #Make call
-  url <- "https://ecos.fws.gov/ServCatServices/servcat-secure/v4/rest/AdvancedSearch/Composite?top=5000"
+  url <- "https://iris.fws.gov/APPS/ServCatServices/servcat/v4/rest/AdvancedSearch/Composite?top=5000"
   body <- toJSON(params, auto_unbox = TRUE)
-  response <- POST(url = url, config = authenticate(":",":","ntlm"), body = body, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
-  #response <- POST(url = url, body = body, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
+  #response <- POST(url = url, config = authenticate(":",":","ntlm"), body = body, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
+  response <- POST(url = url, body = body, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
   
   #Halt code if error
   if(http_error(response) == TRUE){
@@ -24,8 +24,8 @@ api_call_long <- function(params){
 #Takes list of reference codes and returns the result of a Reference Profile
 #get request
 api_call_profile <- function(codelist){
-  #Buid URL
-  url <- "https://ecos.fws.gov/ServCatServices/servcat-secure/v4/rest/Profile?q="
+  #Build URL
+  url <- "https://iris.fws.gov/APPS/ServCatServices/servcat/v4/rest/Profile?q="
   for (i in 1:length(codelist)){
     if (i == 1){
       url <- paste(url,codelist[i],sep="")
@@ -35,8 +35,8 @@ api_call_profile <- function(codelist){
   }
   
   #Make call
-  response <- GET(url = url, config = authenticate(":",":","ntlm"), encode = "json", add_headers("Content-Type" = "application/json"), verbose())
-  #response <- GET(url = url, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
+  #response <- GET(url = url, config = authenticate(":",":","ntlm"), encode = "json", add_headers("Content-Type" = "application/json"), verbose())
+  response <- GET(url = url, encode = "json", add_headers("Content-Type" = "application/json"), verbose())
   
   #Halt code if error
   if(http_error(response) == TRUE){
