@@ -155,7 +155,7 @@ plot_remaining <- function(inputRef){
       plot.background = element_blank(),
       axis.text.x = element_text(size = 17, color = "white"),
       axis.text.y = element_text(size = 16, color = "white"),
-      axis.title.y = element_text(size = 17, color = "white", face = "bold", margin = margin(r = 10)),
+      axis.title.y = element_text(size = 15, color = "white", face = "bold", margin = margin(r = 10)),
       plot.margin = unit(c(0.2,0.3,0.3,0.3), "cm")
     )
   #remaining
